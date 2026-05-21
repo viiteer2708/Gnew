@@ -1,17 +1,29 @@
 'use client'
 
 import { useState, useMemo, useCallback } from 'react'
+import Image from 'next/image'
 import {
   type LucideIcon,
   FileText, FileSpreadsheet, Presentation, Film, File,
-  Download, Loader2, FolderOpen, Search, ChevronDown, ChevronRight,
+  Download, Loader2, FolderOpen, Search, ChevronRight,
   ChevronLeft, Folder, Home
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { getBrandLogo } from '@/lib/brand-logos'
 import type { DBFile, DBSection } from '@/lib/dropbox'
 
 const DROPBOX_ZIP = 'https://www.dropbox.com/scl/fo/rmx4pz7nubvqdof1mhbri/AFa5wvHv4AABAWr-NXgOjMo?rlkey=goek0ng74bdrm6dg7hsxknyw8&dl=1'
 const DROPBOX_FOLDER = 'https://www.dropbox.com/scl/fo/rmx4pz7nubvqdof1mhbri/AFa5wvHv4AABAWr-NXgOjMo?rlkey=goek0ng74bdrm6dg7hsxknyw8&dl=0'
+
+// Slugifica el nombre de la marca para resolver el logo en /public/logos/marcas/{slug}.svg
+function brandSlug(name: string): string {
+  return name
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+}
 
 function getExt(name: string) {
   return name.split('.').pop()?.toUpperCase() ?? ''
@@ -127,49 +139,53 @@ function FolderSkeleton() {
   )
 }
 
-// ── Section (accordion for home view) ────────────────────────────────────────
+// ── Brand card (home view) ───────────────────────────────────────────────────
 
-function Section({
+function BrandCard({
   section,
-  defaultOpen = false,
-  onNavigateFolder,
+  onSelect,
 }: {
   section: DBSection
-  defaultOpen?: boolean
-  onNavigateFolder: (id: string, name: string) => void
+  onSelect: () => void
 }) {
-  const [open, setOpen] = useState(defaultOpen)
+  const [logoFailed, setLogoFailed] = useState(false)
+  const slug = brandSlug(section.name)
+  const logoSrc = getBrandLogo(slug) ?? `/logos/marcas/${slug}.svg`
+  const totalItems = section.files.length + section.subfolders.length
 
   return (
-    <div className="rounded-xl border border-border overflow-hidden">
-      <button
-        onClick={() => setOpen(v => !v)}
-        className="flex w-full items-center justify-between gap-3 bg-card/80 px-4 py-3 text-left hover:bg-card transition-colors"
-      >
-        <div className="flex items-center gap-2">
-          <FolderOpen className="h-4 w-4 text-primary/70" />
-          <span className="text-sm font-semibold text-foreground">{section.name}</span>
-        </div>
-        {open ? <ChevronDown className="h-4 w-4 text-muted-foreground" /> : <ChevronRight className="h-4 w-4 text-muted-foreground" />}
-      </button>
-
-      {open && (
-        <div className="border-t border-border p-3 space-y-2 bg-background/30">
-          {section.subfolders.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 mb-2">
-              {section.subfolders.map(sf => (
-                <SubfolderCard
-                  key={sf.id}
-                  name={sf.name}
-                  onClick={() => onNavigateFolder(sf.id, sf.name)}
-                />
-              ))}
-            </div>
-          )}
-          {section.files.map(f => <FileRow key={f.id} file={f} />)}
-        </div>
-      )}
-    </div>
+    <button
+      onClick={onSelect}
+      className="group flex flex-col items-center gap-3 rounded-2xl border border-border bg-card/60 p-6 text-center hover:border-primary/40 hover:bg-card hover:shadow-lg hover:shadow-primary/5 transition-all"
+    >
+      <div className="relative flex h-24 w-full items-center justify-center">
+        {logoFailed ? (
+          <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+            <span className="text-2xl font-black text-primary">
+              {section.name.slice(0, 2).toUpperCase()}
+            </span>
+          </div>
+        ) : (
+          <Image
+            src={logoSrc}
+            alt={section.name}
+            width={160}
+            height={80}
+            className="max-h-20 w-auto object-contain transition-transform group-hover:scale-105"
+            onError={() => setLogoFailed(true)}
+            unoptimized
+          />
+        )}
+      </div>
+      <div>
+        <p className="text-sm font-bold uppercase tracking-wide text-foreground group-hover:text-primary transition-colors">
+          {section.name}
+        </p>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          {totalItems} elemento{totalItems !== 1 ? 's' : ''}
+        </p>
+      </div>
+    </button>
   )
 }
 
@@ -215,9 +231,10 @@ function Breadcrumb({
 interface DropboxMaterialesProps {
   rootFiles: DBFile[]
   sections: DBSection[]
+  source?: 'local' | 'dropbox'
 }
 
-export function DropboxMateriales({ rootFiles, sections }: DropboxMaterialesProps) {
+export function DropboxMateriales({ rootFiles, sections, source = 'dropbox' }: DropboxMaterialesProps) {
   const [search, setSearch] = useState('')
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbEntry[]>([])
   const [navigating, setNavigating] = useState(false)
@@ -296,24 +313,26 @@ export function DropboxMateriales({ rootFiles, sections }: DropboxMaterialesProp
             <span className="text-muted-foreground ml-1">en total</span>
           </div>
         </div>
-        <div className="flex gap-2">
-          <a
-            href={DROPBOX_FOLDER}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground hover:border-primary/30 hover:text-foreground transition-all"
-          >
-            <FolderOpen className="h-3.5 w-3.5" />
-            Ver en Dropbox
-          </a>
-          <a
-            href={DROPBOX_ZIP}
-            className="flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition-all"
-          >
-            <Download className="h-3.5 w-3.5" />
-            Descargar todo (ZIP)
-          </a>
-        </div>
+        {source === 'dropbox' && (
+          <div className="flex gap-2">
+            <a
+              href={DROPBOX_FOLDER}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground hover:border-primary/30 hover:text-foreground transition-all"
+            >
+              <FolderOpen className="h-3.5 w-3.5" />
+              Ver en Dropbox
+            </a>
+            <a
+              href={DROPBOX_ZIP}
+              className="flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition-all"
+            >
+              <Download className="h-3.5 w-3.5" />
+              Descargar todo (ZIP)
+            </a>
+          </div>
+        )}
       </div>
 
       {/* Breadcrumb */}
@@ -366,8 +385,17 @@ export function DropboxMateriales({ rootFiles, sections }: DropboxMaterialesProp
               )}
             </div>
           ) : isHome ? (
-            /* ── Home view: sections accordion ─────────────────────────── */
-            <div className="space-y-3">
+            /* ── Home view: brand cards grid ───────────────────────────── */
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+                {sections.map(section => (
+                  <BrandCard
+                    key={section.id}
+                    section={section}
+                    onSelect={() => enterSection(section)}
+                  />
+                ))}
+              </div>
               {rootFiles.length > 0 && (
                 <div className="rounded-xl border border-border overflow-hidden">
                   <div className="flex items-center gap-2 bg-card/80 px-4 py-3">
@@ -379,17 +407,6 @@ export function DropboxMateriales({ rootFiles, sections }: DropboxMaterialesProp
                   </div>
                 </div>
               )}
-              {sections.map((section, i) => (
-                <Section
-                  key={section.id}
-                  section={section}
-                  defaultOpen={i === 0}
-                  onNavigateFolder={(id, name) => {
-                    enterSection(section)
-                    navigateToFolder(id, name)
-                  }}
-                />
-              ))}
             </div>
           ) : (
             /* ── Folder view: subfolders + files ───────────────────────── */

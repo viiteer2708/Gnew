@@ -1,5 +1,5 @@
 import { Package, AlertCircle } from 'lucide-react'
-import { getMateriales } from '@/lib/dropbox'
+import { getMateriales } from '@/lib/materiales-source'
 import { DropboxMateriales } from '@/components/materiales/DropboxMateriales'
 
 export const dynamic = 'force-dynamic'
@@ -7,11 +7,13 @@ export const dynamic = 'force-dynamic'
 export default async function MaterialesPage() {
   let rootFiles
   let sections
+  let source: 'local' | 'dropbox' = 'dropbox'
 
   try {
     const data = await getMateriales()
     rootFiles = data.rootFiles
     sections = data.sections
+    source = data.source
   } catch (err) {
     console.error('[Materiales] Error al cargar:', err)
     rootFiles = null
@@ -29,13 +31,13 @@ export default async function MaterialesPage() {
         <div>
           <h1 className="text-xl font-bold text-foreground">Materiales</h1>
           <p className="text-sm text-muted-foreground">
-            Biblioteca de recursos comerciales — sincronizado con Dropbox
+            Biblioteca de recursos comerciales — {source === 'local' ? 'carpeta local sincronizada' : 'sincronizado con Dropbox'}
           </p>
         </div>
       </div>
 
       {hasData ? (
-        <DropboxMateriales rootFiles={rootFiles!} sections={sections!} />
+        <DropboxMateriales rootFiles={rootFiles!} sections={sections!} source={source} />
       ) : (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-8 text-center">
           <AlertCircle className="h-8 w-8 text-muted-foreground" />
