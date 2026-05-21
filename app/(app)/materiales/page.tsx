@@ -37,7 +37,7 @@ export default async function MaterialesPage() {
       </div>
 
       {hasData ? (
-        <DropboxMateriales rootFiles={rootFiles!} sections={sections!} source={source} />
+        <DropboxMateriales rootFiles={rootFiles!} sections={sections!} />
       ) : (
         <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card p-8 text-center">
           <AlertCircle className="h-8 w-8 text-muted-foreground" />

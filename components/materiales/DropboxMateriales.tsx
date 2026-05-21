@@ -12,9 +12,6 @@ import { cn } from '@/lib/utils'
 import { getBrandLogo } from '@/lib/brand-logos'
 import type { DBFile, DBSection } from '@/lib/dropbox'
 
-const DROPBOX_ZIP = 'https://www.dropbox.com/scl/fo/rmx4pz7nubvqdof1mhbri/AFa5wvHv4AABAWr-NXgOjMo?rlkey=goek0ng74bdrm6dg7hsxknyw8&dl=1'
-const DROPBOX_FOLDER = 'https://www.dropbox.com/scl/fo/rmx4pz7nubvqdof1mhbri/AFa5wvHv4AABAWr-NXgOjMo?rlkey=goek0ng74bdrm6dg7hsxknyw8&dl=0'
-
 // Slugifica el nombre de la marca para resolver el logo en /public/logos/marcas/{slug}.svg
 function brandSlug(name: string): string {
   return name
@@ -222,10 +219,9 @@ function Breadcrumb({
 interface DropboxMaterialesProps {
   rootFiles: DBFile[]
   sections: DBSection[]
-  source?: 'local' | 'dropbox'
 }
 
-export function DropboxMateriales({ rootFiles, sections, source = 'dropbox' }: DropboxMaterialesProps) {
+export function DropboxMateriales({ rootFiles, sections }: DropboxMaterialesProps) {
   const [search, setSearch] = useState('')
   const [breadcrumb, setBreadcrumb] = useState<BreadcrumbEntry[]>([])
   const [navigating, setNavigating] = useState(false)
@@ -304,26 +300,6 @@ export function DropboxMateriales({ rootFiles, sections, source = 'dropbox' }: D
             <span className="text-muted-foreground ml-1">en total</span>
           </div>
         </div>
-        {source === 'dropbox' && (
-          <div className="flex gap-2">
-            <a
-              href={DROPBOX_FOLDER}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-xs font-medium text-muted-foreground hover:border-primary/30 hover:text-foreground transition-all"
-            >
-              <FolderOpen className="h-3.5 w-3.5" />
-              Ver en Dropbox
-            </a>
-            <a
-              href={DROPBOX_ZIP}
-              className="flex items-center gap-2 rounded-lg border border-primary/40 bg-primary/10 px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/20 transition-all"
-            >
-              <Download className="h-3.5 w-3.5" />
-              Descargar todo (ZIP)
-            </a>
-          </div>
-        )}
       </div>
 
       {/* Breadcrumb */}
