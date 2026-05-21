@@ -151,40 +151,31 @@ function BrandCard({
   const [logoFailed, setLogoFailed] = useState(false)
   const slug = brandSlug(section.name)
   const logoSrc = getBrandLogo(slug) ?? `/logos/marcas/${slug}.svg`
-  const totalItems = section.files.length + section.subfolders.length
 
   return (
     <button
       onClick={onSelect}
-      className="group flex flex-col items-center gap-3 rounded-2xl border border-border bg-card/60 p-6 text-center hover:border-primary/40 hover:bg-card hover:shadow-lg hover:shadow-primary/5 transition-all"
+      aria-label={section.name}
+      title={section.name}
+      className="group flex h-32 items-center justify-center rounded-2xl border border-border bg-card/60 p-6 hover:border-primary/40 hover:bg-card hover:shadow-lg hover:shadow-primary/5 transition-all"
     >
-      <div className="relative flex h-24 w-full items-center justify-center">
-        {logoFailed ? (
-          <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
-            <span className="text-2xl font-black text-primary">
-              {section.name.slice(0, 2).toUpperCase()}
-            </span>
-          </div>
-        ) : (
-          <Image
-            src={logoSrc}
-            alt={section.name}
-            width={160}
-            height={80}
-            className="max-h-20 w-auto object-contain transition-transform group-hover:scale-105"
-            onError={() => setLogoFailed(true)}
-            unoptimized
-          />
-        )}
-      </div>
-      <div>
-        <p className="text-sm font-bold uppercase tracking-wide text-foreground group-hover:text-primary transition-colors">
-          {section.name}
-        </p>
-        <p className="mt-1 text-[11px] text-muted-foreground">
-          {totalItems} elemento{totalItems !== 1 ? 's' : ''}
-        </p>
-      </div>
+      {logoFailed ? (
+        <div className="flex h-20 w-20 items-center justify-center rounded-2xl border border-primary/20 bg-primary/10">
+          <span className="text-2xl font-black text-primary">
+            {section.name.slice(0, 2).toUpperCase()}
+          </span>
+        </div>
+      ) : (
+        <Image
+          src={logoSrc}
+          alt={section.name}
+          width={200}
+          height={100}
+          className="max-h-20 w-auto object-contain transition-transform group-hover:scale-105"
+          onError={() => setLogoFailed(true)}
+          unoptimized
+        />
+      )}
     </button>
   )
 }
