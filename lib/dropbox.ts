@@ -134,9 +134,9 @@ export async function listFolder(pathOrId: string): Promise<{ files: DBFile[]; s
   return { files, subfolders }
 }
 
-// ── Estructura de carpetas: MATERIAL ENERGIA ────────────────────────────────
+// ── Estructura de carpetas: CRM GNEW ────────────────────────────────────────
 
-const ROOT_FOLDER_ID = 'id:Q-MSjjekoQYAAAAAAAAivA' // MATERIAL ENERGIA
+const ROOT_FOLDER_ID = '/CRM GNEW'
 
 export async function getMateriales(): Promise<{ rootFiles: DBFile[]; sections: DBSection[] }> {
   // Descubrir dinámicamente todas las subcarpetas de MATERIAL ENERGIA
